@@ -1,4 +1,3 @@
-nodemodules/
-tests/
-logfile.log
-uncaughtException.log
+/node_modules
+logfile.log*
+uncaughtException.log*
