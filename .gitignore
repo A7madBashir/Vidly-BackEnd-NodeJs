@@ -1,0 +1,4 @@
+nodemodules/
+tests/
+logfile.log
+uncaughtException.log
