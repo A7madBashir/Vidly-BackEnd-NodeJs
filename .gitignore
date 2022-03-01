@@ -1,7 +1,5 @@
-
-node_modules
-tests
-
-logfile.log
-uncaughtException.log
+node_modules/
+tests/
+# Logs and databases #
+######################
 *.log
