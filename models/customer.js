@@ -28,7 +28,8 @@ customerSchema.statics.createCustomer = function (cusname, phone) {
 };
 const Customer = mongoose.model("Customer", customerSchema);
 
-function validateCustomer(customer) {
+function validateCustomer(customer,toUpdate) {
+
   const schema = Joi.object({
     name: Joi.string().min(3).max(25).required(),
     phone: Joi.string().min(3).max(25).required(),
@@ -40,6 +41,7 @@ function validateCustomer(customer) {
     { abortEarly: false }
   );
 }
+
 
 exports.Customer = Customer;
 exports.validate = validateCustomer;

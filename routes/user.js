@@ -5,7 +5,6 @@ const auth = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const { Users, validateUser } = require("../models/user");
 
-
 router.get("/me", auth, async (req, res) => {
   const id = req.user._id;
   const result = await Users.findById(id).select("-password");
@@ -19,7 +18,7 @@ router.post("/", validate(validateUser), async (req, res) => {
   if (user) return res.status(400).send("User alerady registered.");
 
   const result = await Users.createUser(username, password, email);
-  result.save()  
+  result.save();
   const token = result.generateAuthToken();
   res
     .header("x-auth-token", token)

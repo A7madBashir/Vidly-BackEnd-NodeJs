@@ -21,13 +21,13 @@ router.get("/:name", async (req, res) => {
 
   res.status(200).send(...customer);
 });
-router.post("/", valid(validate), async (req, res) => {
+router.post("/", valid(validate,false), async (req, res) => {
   const { name, phone } = req.body;
   const result = await Customer.createCustomer(name, phone);
-  result.save();  
+  result.save();
   res.send(result);
 });
-router.put("/:id", [auth, valid(validate)], async (req, res) => {
+router.put("/:id", [auth, valid(validate,true)], async (req, res) => {
   const id = req.params.id;
   const { name, phone } = req.body;
   const customer = await Customer.find({ _id: id }).select({
@@ -42,7 +42,7 @@ router.put("/:id", [auth, valid(validate)], async (req, res) => {
   res.send(result);
 });
 async function updateCustomer(id, newName, newPhone) {
-  const result = await Customer.findByIdAndUpdate(
+  const data = await Customer.findByIdAndUpdate(
     id,
     {
       $set: {
@@ -53,8 +53,8 @@ async function updateCustomer(id, newName, newPhone) {
     { new: true }
   );
 
-  console.log(result);
-  return result;
+  console.log(data);
+  return data;
 }
 
 router.delete("/:id", auth, async (req, res) => {
