@@ -11,15 +11,16 @@
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
+    "moment": "^2.29.1",
     "mongoose": "^6.2.3",
     "winston": "^3.6.0",
     "winston-mongodb": "^5.0.7"
   },
   "devDependencies": {
-    "jest": "^27.5.1"
+    "jest": "^27.5.1",
+    "supertest": "^6.2.2"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest --watchAll --verbose"
   }
 }
-

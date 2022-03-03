@@ -1,20 +1,21 @@
 const express = require("express");
 const router = express.Router();
+const config = require("config");
+const Fawn = require("fawn");
+Fawn.init(config.get("db"));
+
 const { Movie } = require("../models/movie");
 const { Rental, validateRental } = require("../models/rental");
 const { Customer } = require("../models/customer");
-const Fawn = require("fawn");
 const auth = require("../middleware/auth");
+const validate = require("../middleware/validate");
 
 router.get("/", async (req, res) => {
   const result = await Rental.find().sort("-dateOut");
   res.status(200).send(result);
 });
 
-router.post("/",auth, async (req, res) => {
-  const { error } = validateRental(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
+router.post("/", [auth, validate(validateRental)], async (req, res) => {
   const { customerId, movieId } = req.body;
 
   const customer = await Customer.findById(customerId);
@@ -26,20 +27,12 @@ router.post("/",auth, async (req, res) => {
   if (movie.numberInStock === 0)
     return res.status(400).send("Movie not In stack.");
 
-  let rental = new Rental({
-    customer: {
-      _id: customer._id,
-      name: customer.name,
-      phone: customer.phone,
-    },
-    movie: {
-      _id: movie._id,
-      title: movie.title,
-      dailyRentalRate: movie.dailyRentalRate,
-    },
-  });
+  const rental = Rental.createRental(customer, movie);
+
+  console.log(rental);
+  const result = new Fawn.Task();
   try {
-    new Fawn.Task()
+    result
       .save("rentals", rental)
       .update("movies", { _id: movie._id }, { $inc: { numberInStock: -1 } })
       .run();
@@ -47,58 +40,35 @@ router.post("/",auth, async (req, res) => {
     console.log("Something went wrong", err);
     res.status(500).send("Something Failed");
   }
-  res.send(result);
+  res.status(200).send(result);
 });
 
-// router.put("/:id", async (req, res) => {
-//   const id = req.params.id;
-//   const title = req.body.title;
-//   const genreId = req.body.genreId;
-//   const movie = await Movie.find({ _id: id }).select({
-//     name: 1,
-//   });
-//   if (!movie || movie.length === 0)
-//     return res.status(404).send("Sorry there is not movie with the id:" + id);
+router.post("/rentalFee", [auth, validate(validateReturn)], async (req, res) => {
+  const { customerId, movieId } = req.body;
 
-//   const { error } = validateMovie({ title: title, genreId: genreId });
-//   console.log(error);
-//   if (error.details) {
-//     return res.status(400).send(error.details.map((e) => e.message));
-//   }
-//   const result = await updateMovie(id, title);
-//   res.send(result);
-// });
-// async function updateMovie(id, newTitle) {
-//   const result = await Movie.findByIdAndUpdate(
-//     id,
-//     {
-//       $set: {
-//         title: newTitle,
-//       },
-//     },
-//     { new: true }
-//   );
+  const rental = await Rental.lookUp(customerId, movieId);
+  if (!rental) return res.status(404).send("rental not found");
 
-//   console.log(result);
-//   return result;
-// }
+  if (rental.dateReturned) return res.status(400).send("Rental is processed");
 
-// router.delete("/:id", async (req, res) => {
-//   const id = req.params.id;
-//   const movie = await Movie.find({ _id: id }).select({
-//     name: 1,
-//   });
-//   //   console.log(movie);
-//   if (!movie || movie.length === 0)
-//     return res.status(404).send("Sorry there is no movie with the id:" + id);
-//   const result = await removeMovie(id);
-//   res.status(202).send(result);
-// });
+  rental.updateRentalFee();
 
-// async function removeMovie(id) {
-//   const deleteFind = await Movie.findByIdAndRemove(id);
-//   console.log(deleteFind);
-//   return deleteFind;
-// }
+  await Movie.findByIdAndUpdate(
+    { _id: rental.movie._id },
+    {
+      $inc: { numberInStock: 1 },
+    }
+  );
 
+  await rental.save();
+  return res.send(rental);
+});
+
+function validateReturn(req) {
+  const schema = Joi.object({
+    customerId: Joi.objectId().required(),
+    movieId: Joi.objectId().required(),
+  });
+  return schema.validate({ customerId: req.customerId, movieId: req.movieId });
+}
 module.exports = router;

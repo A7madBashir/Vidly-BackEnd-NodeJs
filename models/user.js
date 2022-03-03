@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
-const Joi = require("joi");
 const { Schema } = mongoose;
+const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const config = require("config");
+const bcrypt = require("bcrypt");
 
 const userSchema = new Schema({
   username: {
@@ -27,22 +28,37 @@ const userSchema = new Schema({
   },
   isAdmin: {
     type: Boolean,
-    required: true,
+    default:false    
   },
 });
 //userSchema.methods.generateAuthToken=function(){}
 // same result
 userSchema.method("generateAuthToken", function () {
-  const token = jwt.sign({ _id: this._id ,isAdmin:this.isAdmin}, config.get("jwtPrivateKey"));
+  const token = jwt.sign(
+    { _id: this._id, isAdmin: this.isAdmin },
+    config.get("jwtPrivateKey")
+  );
   return token;
 });
+
+userSchema.statics.createUser = async function (username, password, email) {
+  const salt = await bcrypt.genSalt(10);
+  const hashpass = await bcrypt.hash(password, salt);
+
+  return new this({
+    username: username,
+    password: hashpass,
+    email: email,
+  });
+};
+
 const Users = mongoose.model("Users", userSchema);
 
 function validateUser(user) {
   const schema = Joi.object({
-    username: Joi.string().min(3).required(),
-    password: Joi.string().min(3).max(255).required(),
-    email: Joi.string().min(3).max(255).required().email(),
+    username: Joi.string().min(5).required(),
+    password: Joi.string().min(8).max(255).required(),
+    email: Joi.string().min(5).max(255).required().email(),
   });
 
   return schema.validate(user, { abortEarly: false });

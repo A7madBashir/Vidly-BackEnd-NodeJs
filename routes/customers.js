@@ -2,21 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const { Customer, validate } = require("../models/customer");
-
-async function createCustomer(cusname, phone) {
-  const customer = new Customer({
-    name: cusname,
-    phone: phone,
-  });
-  try {
-    const result = await customer.save();
-    console.log(result);
-    return result;
-  } catch (ex) {
-    // console.log("Something went wrong:", ex);
-    return ex.message;
-  }
-}
+const valid = require("../middleware/validate");
 
 router.get("/", async (req, res) => {
   const result = await Customer.find().sort("name");
@@ -35,13 +21,13 @@ router.get("/:name", async (req, res) => {
 
   res.status(200).send(...customer);
 });
-router.post("/", async (req, res) => {
+router.post("/", valid(validate), async (req, res) => {
   const { name, phone } = req.body;
-  const result = await createCustomer(name, phone);
-  console.log(result);
+  const result = await Customer.createCustomer(name, phone);
+  result.save();  
   res.send(result);
 });
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", [auth, valid(validate)], async (req, res) => {
   const id = req.params.id;
   const { name, phone } = req.body;
   const customer = await Customer.find({ _id: id }).select({
@@ -52,14 +38,6 @@ router.put("/:id", auth, async (req, res) => {
       .status(404)
       .send("Sorry there is not Customer with the given id:" + id);
 
-  const { error } = validate(req.body);
-  console.log(error);
-  if (error.details) {
-    // if (error.details || []) {
-    return res.status(400).send(error.details.map((e) => e.message));
-    // }
-    // return res.status(400).send(error.message);
-  }
   const result = await updateCustomer(id, name, phone);
   res.send(result);
 });
@@ -79,7 +57,7 @@ async function updateCustomer(id, newName, newPhone) {
   return result;
 }
 
-router.delete("/:id",auth, async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   const id = req.params.id;
   const customer = await Customer.find({ _id: id }).select({
     name: 1,

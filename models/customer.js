@@ -20,6 +20,12 @@ const customerSchema = new Schema({
     maxlength: 25,
   },
 });
+customerSchema.statics.createCustomer = function (cusname, phone) {
+  return this({
+    name: cusname,
+    phone: phone,
+  });
+};
 const Customer = mongoose.model("Customer", customerSchema);
 
 function validateCustomer(customer) {
@@ -35,5 +41,5 @@ function validateCustomer(customer) {
   );
 }
 
-exports.Customer=Customer;
-exports.validate=validateCustomer;
+exports.Customer = Customer;
+exports.validate = validateCustomer;

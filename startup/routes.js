@@ -15,5 +15,6 @@ module.exports = function (app) {
   app.use("/api/rentals", rental);
   app.use("/api/users", users);
   app.use("/api/auth", auth);
+
   app.use(error); // function take 4 argument first of them the error of express
 };

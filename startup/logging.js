@@ -1,5 +1,5 @@
 const winston = require("winston");
-require("winston-mongodb");
+// require("winston-mongodb");
 require("express-async-errors"); // return me express hanlder with err argument extra this argument set in the first then comes the rest of express middleware res,req,next but as i say this function will enable app.use() that has function with 4 arg and this what we defined in error file
 
 /*
@@ -39,10 +39,10 @@ module.exports = function () {
       filename: "logfile.log",
     })
   );
-  winston.add(
-    new winston.transports.MongoDB({
-      db: "mongodb://localhost/vidly", //for log the error in the mongo db document
-      level: "error",
-    })
-  );
+  // winston.add(
+  //   new winston.transports.MongoDB({
+  //     db: "mongodb://localhost/vidly", //for log the error in the mongo db document
+  //     level: "error",
+  //   })
+  // );
 };

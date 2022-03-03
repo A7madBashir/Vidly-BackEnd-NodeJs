@@ -5,6 +5,7 @@ const { Users ,generateAuthToken} = require("../models/user");
 const _ = require("lodash");
 const Joi = require("joi");
 const { application } = require("express");
+const validate = require("../middleware/validate");
 
 router.get("/", async (req, res) => {
   const result = await Users.find().sort("username");
@@ -12,10 +13,8 @@ router.get("/", async (req, res) => {
   res.send(result);
 });
 
-router.post("/", async (req, res) => {
-  const { error } = validateAuth(req.body);
-  if (error) return res.status(400).send(error.details);
-
+router.post("/", validate(validateAuth),async (req, res) => {
+  
   const { password, email } = req.body;
 
   let user = await Users.findOne({ email: email });
@@ -26,7 +25,7 @@ router.post("/", async (req, res) => {
 
 const token=user.generateAuthToken();
   //   res.send(_.pick(user, ["_id", "username", "email"]));
-  res.send({ username: user.username, email: user.email, token: token });
+  res.json({ username: user.username, email: user.email, token: token });
 });
 
 function validateAuth(req) {

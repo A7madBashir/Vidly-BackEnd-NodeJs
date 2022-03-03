@@ -16,12 +16,22 @@ const movieSchema = new Schema({
   numberInStock: { type: Number, default: 0 },
   dailyRentalRate: { type: Number, default: 0 },
 });
+movieSchema.statics.createMovie = function (title, genre) {
+  return new this({
+    title: title,
+    genre: {
+      // set this specfic propreties for just not set genre object to an genre object cause it maybe have 50 prop and i want to just update 2 or 3 propreties
+      _id: genre._id,
+      name: genre.name,
+    },
+  });
+};
 const Movie = mongoose.model("Movie", movieSchema);
 
 function validateMovie(movie) {
   const schema = Joi.object({
-    name: Joi.string().min(3).required(),
-    genreId: Joi.objectId.required(),
+    title: Joi.string().min(3).required(),
+    genreId: Joi.objectId().required(),
     // here i use external document to validate an object id of mongo document
     // this action seems to use mongoose.isValid()
     // and send any number i want and it's return true if there were an object id or false if there not
