@@ -23,6 +23,10 @@
     "supertest": "^6.2.2"
   },
   "scripts": {
-    "test": "jest --watchAll --verbose"
+    "test": "jest --watchAll --verbose",
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "16.13.0"
   }
 }
