@@ -6,6 +6,7 @@ require("./startup/mongodb")();
 require("./startup/logging")();
 require("./startup/config")();
 require("./startup/validation")();
+require("./startup/prod")(app);
 
 app.get("/", (req, res) => {
   res
